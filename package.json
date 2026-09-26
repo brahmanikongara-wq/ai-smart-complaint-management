@@ -1,0 +1,25 @@
+{
+  "name": "ai-smart-complaint-platform",
+  "version": "1.0.0",
+  "description": "ResolvAI - Full-Stack AI Smart Complaint & Service Management Platform",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend:dev": "cd frontend && npm run dev",
+    "seed": "cd backend && npm run prisma:seed",
+    "test": "cd backend && npm test",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build"
+  },
+  "keywords": [
+    "ai",
+    "complaint-management",
+    "service-management",
+    "triage",
+    "chatbot",
+    "rag",
+    "embeddings",
+    "sla"
+  ],
+  "author": "ResolvAI Team",
+  "license": "MIT"
+}

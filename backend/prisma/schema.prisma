@@ -1,0 +1,178 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  role         String       @default("CITIZEN") // CITIZEN, AGENT, ADMIN, MANAGER
+  phone        String?
+  avatar       String?
+  departmentId String?
+  department   Department?  @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  complaintsFiled     Complaint[]       @relation("UserComplaints")
+  assignedComplaints  Complaint[]       @relation("AgentComplaints")
+  statusChanges       StatusHistory[]
+  notifications       Notification[]
+  chatSessions        ChatSession[]
+}
+
+model Department {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  users       User[]
+  categories  Category[]
+  complaints  Complaint[]
+}
+
+model Category {
+  id              String       @id @default(uuid())
+  name            String       @unique
+  description     String?
+  departmentId    String
+  department      Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  defaultPriority String       @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  keywordsJson    String       @default("[]") // JSON string of keywords
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  complaints      Complaint[]
+  slaRules        SlaRule[]
+}
+
+model Complaint {
+  id               String       @id @default(uuid())
+  ticketNumber     String       @unique
+  userId           String
+  user             User         @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  description      String
+  categoryId       String
+  category         Category     @relation(fields: [categoryId], references: [id])
+  departmentId     String
+  department       Department   @relation(fields: [departmentId], references: [id])
+  priority         String       @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  status           String       @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, CLOSED, REOPENED
+  location         String?
+  sentiment        String       @default("NEUTRAL") // POSITIVE, NEUTRAL, NEGATIVE
+  sentimentScore   Float        @default(0.0) // -1.0 to 1.0
+  urgencyScore     Float        @default(0.5) // 0.0 to 1.0
+  assignedStaffId  String?
+  assignedStaff    User?        @relation("AgentComplaints", fields: [assignedStaffId], references: [id])
+  slaDeadline      DateTime?
+  resolvedAt       DateTime?
+  embeddingJson    String?      // Stored normalized vector embeddings as JSON
+  aiSummary        String?      // AI-generated concise summary
+  aiSuggestedDraft String?      // AI-generated quick response draft for agents
+  duplicateOfId    String?      // Reference if marked as duplicate
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  attachments      ComplaintAttachment[]
+  history          StatusHistory[]
+  feedback         Feedback?
+}
+
+model ComplaintAttachment {
+  id          String     @id @default(uuid())
+  complaintId String
+  complaint   Complaint  @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  createdAt   DateTime   @default(now())
+}
+
+model StatusHistory {
+  id          String     @id @default(uuid())
+  complaintId String
+  complaint   Complaint  @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  oldStatus   String
+  newStatus   String
+  changedById String
+  changedBy   User       @relation(fields: [changedById], references: [id])
+  note        String?
+  createdAt   DateTime   @default(now())
+}
+
+model Feedback {
+  id          String     @id @default(uuid())
+  complaintId String     @unique
+  complaint   Complaint  @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  rating      Int        // 1 to 5
+  comment     String?
+  createdAt   DateTime   @default(now())
+}
+
+model ChatSession {
+  id           String        @id @default(uuid())
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionToken String        @unique
+  status       String        @default("ACTIVE") // ACTIVE, ESCALATED, RESOLVED
+  metadataJson String?       // Context such as complaintDraft in progress
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  messages     ChatMessage[]
+}
+
+model ChatMessage {
+  id             String       @id @default(uuid())
+  sessionId      String
+  session        ChatSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  senderType     String       // USER, BOT, AGENT
+  message        String
+  intentDetected String?      // FILE_COMPLAINT, CHECK_STATUS, FAQ, ESCALATE, GENERAL
+  confidenceScore Float?      // 0.0 to 1.0
+  contextJson    String?
+  createdAt      DateTime     @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("STATUS_UPDATE") // STATUS_UPDATE, ASSIGNMENT, SLA_BREACH, SYSTEM
+  isRead    Boolean  @default(false)
+  linkUrl   String?
+  createdAt DateTime @default(now())
+}
+
+model SlaRule {
+  id                  String    @id @default(uuid())
+  categoryId          String
+  category            Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  priority            String    // LOW, MEDIUM, HIGH, CRITICAL
+  resolutionTimeHours Int
+  escalateAfterHours  Int
+  createdAt           DateTime  @default(now())
+
+  @@unique([categoryId, priority])
+}
+
+model FaqItem {
+  id           String   @id @default(uuid())
+  question     String
+  answer       String
+  category     String
+  keywordsJson String   @default("[]")
+  createdAt    DateTime @default(now())
+}
