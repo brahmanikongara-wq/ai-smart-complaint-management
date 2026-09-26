@@ -15,10 +15,14 @@ import {
   Search
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
+import RibbonGlow from '../components/originkit/ui/ribbon-glow';
 
 export const LandingPage: React.FC = () => {
   const { isAuthenticated, user, quickSwitchDemo } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
 
   // Interactive Live AI Triage Demo on Landing Page!
@@ -68,12 +72,34 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="space-y-20 pb-20">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-16 lg:pt-20 lg:pb-24">
-        {/* Glow Background Elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-brand-500/20 via-indigo-500/20 to-cyan-500/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+      {/* Hero Section — RibbonGlow WebGL Background */}
+      <section className="relative overflow-hidden">
+        {/* RibbonGlow fills the full hero as an animated WebGL canvas */}
+        <div className="absolute inset-0 w-full" style={{ minHeight: 680, zIndex: 0 }}>
+          <RibbonGlow
+            background={isDark ? '#08070F' : '#F3F0FF'}
+            color1={isDark ? '#2FD3F2' : '#7B61FF'}
+            color2={isDark ? '#7B61FF' : '#06B6D4'}
+            speed={42}
+            size={105}
+            angle={-160}
+            hover={120}
+            reach={300}
+            style={{ minHeight: 680, minWidth: 320 }}
+          />
+        </div>
+        {/* Subtle vignette overlay to help text readability */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 1,
+            background: isDark
+              ? 'radial-gradient(ellipse at 50% 0%, transparent 30%, rgba(8,7,15,0.55) 100%)'
+              : 'radial-gradient(ellipse at 50% 0%, transparent 30%, rgba(243,240,255,0.55) 100%)',
+          }}
+        />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 pt-16 pb-20 lg:pt-24 lg:pb-28">
           <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs font-semibold shadow-sm animate-fade-in">
             <Sparkles className="w-3.5 h-3.5 text-brand-500" />
             <span>Next-Gen AI Complaint Triage & Service Resolution</span>

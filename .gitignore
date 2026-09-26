@@ -8,3 +8,4 @@ build/
 *.db-journal
 uploads/*
 !uploads/.gitkeep
+.originkit/

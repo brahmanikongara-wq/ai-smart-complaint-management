@@ -14,9 +14,13 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import RibbonGlow from '../components/originkit/ui/ribbon-glow';
 
 export const LoginPage: React.FC = () => {
   const { login, googleLogin, quickSwitchDemo } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -62,8 +66,33 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6 animate-slide-up">
+    <div className="relative min-h-[80vh] flex items-center justify-center px-4 py-12 overflow-hidden">
+      {/* RibbonGlow full-page animated background */}
+      <div className="absolute inset-0" style={{ zIndex: 0 }}>
+        <RibbonGlow
+          background={isDark ? '#06050E' : '#EEF2FF'}
+          color1={isDark ? '#A78BFA' : '#6366F1'}
+          color2={isDark ? '#2FD3F2' : '#818CF8'}
+          speed={30}
+          size={110}
+          angle={-120}
+          hover={90}
+          reach={260}
+          style={{ minHeight: '100%', minWidth: 320 }}
+        />
+      </div>
+      {/* Frosted-glass vignette so the card pops */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          backdropFilter: 'blur(0px)',
+          background: isDark
+            ? 'radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(6,5,14,0.5) 100%)'
+            : 'radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(238,242,255,0.45) 100%)',
+        }}
+      />
+      <div className="relative z-10 w-full max-w-md space-y-6 animate-slide-up">
         {/* Top Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-500 text-white shadow-lg shadow-brand-500/20">
