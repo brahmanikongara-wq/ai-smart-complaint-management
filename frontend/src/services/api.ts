@@ -1,11 +1,14 @@
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: `${API_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 
 api.interceptors.request.use(
   (config) => {
@@ -27,7 +30,10 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('resolvai_refresh_token');
       if (refreshToken) {
         try {
-          const res = await axios.post('/api/v1/auth/refresh-token', { refreshToken });
+          const res = await axios.post(
+            `${API_URL}/api/v1/auth/refresh-token`,
+            { refreshToken }
+          );
           if (res.data.success) {
             localStorage.setItem('resolvai_token', res.data.data.accessToken);
             localStorage.setItem('resolvai_refresh_token', res.data.data.refreshToken);
